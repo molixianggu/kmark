@@ -1,0 +1,11 @@
+[package]
+name = "web"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+log = "0.4.20"
+rocket = "0.5.0"
+simple_logger = "4.3.3"
+lightyear = { version = "0.9.1", default-features = false }
+base64 = "0.21.7"

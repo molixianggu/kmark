@@ -5,7 +5,10 @@ edition = "2021"
 
 [dependencies]
 log = "0.4.20"
-rocket = "0.5.0"
+rocket = { version = "0.5.0", features = ["json"] }
 simple_logger = "4.3.3"
 lightyear = { version = "0.9.1", default-features = false }
 base64 = "0.21.7"
+lazy_static = "1.4.0"
+config = "0.14.0"
+serde = { version = "1.0.197", features = ["derive"] }

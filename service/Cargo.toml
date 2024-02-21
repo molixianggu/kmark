@@ -16,3 +16,7 @@ bevy = { version = "0.13", default-features = false, features = [
 async-compat = "0.2.3"
 # 
 games = { path = "../games", default-features = false, features = ["server"] }
+base64 = "0.21.7"
+lazy_static = "1.4.0"
+config = "0.14.0"
+serde = { version = "1.0.197", features = ["derive"] }

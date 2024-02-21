@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 use lightyear::client::resource::connect_with_token;
 use lightyear::connection::netcode::ConnectToken;
-use lightyear::prelude::*;
 use lightyear::server::events::{ConnectEvent, DisconnectEvent};
+use std::collections::HashMap;
 
 use super::Page;
 use crate::{enums::GameState, protocol::PlayerBundle};
-use std::collections::HashMap;
+use crate::resource::{ClientGlobal, ServerGlobal};
 
 #[derive(Component)]
 pub struct GamePage;
@@ -79,16 +79,6 @@ impl Page for GamePage {
     fn build(app: &mut App) {
         app.add_systems(OnEnter(Self::state()), (Self::load_map,));
     }
-}
-
-#[derive(Resource)]
-pub(crate) struct ServerGlobal {
-    pub client_id_to_entity_id: HashMap<ClientId, Entity>,
-}
-
-#[derive(Resource)]
-pub(crate) struct ClientGlobal {
-    pub client_id: ClientId,
 }
 
 #[derive(Resource)]

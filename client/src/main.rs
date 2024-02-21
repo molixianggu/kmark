@@ -27,7 +27,7 @@ impl Plugin for GamePlugin {
         );
 
         // 初始化客户端插件
-        let client_plugin_group = ClientPluginGroup::new(0);
+        let client_plugin_group = ClientPluginGroup::new();
         app.add_plugins(client_plugin_group.build());
 
         // 初始化游戏状态

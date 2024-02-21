@@ -14,7 +14,7 @@ pub struct ServerPluginGroup {
 }
 
 impl ServerPluginGroup {
-    pub async fn new(port: u16, transport: Transports, headless: bool) -> ServerPluginGroup {
+    pub async fn new(port: u16, transport: Transports, headless: bool, private_key: [u8; 32], protocol_id: u64) -> ServerPluginGroup {
         // Step 1: create the io (transport + link conditioner)
         let server_addr = SocketAddr::new(Ipv4Addr::UNSPECIFIED.into(), port);
         let transport_config = match transport {
@@ -45,8 +45,8 @@ impl ServerPluginGroup {
             shared: shared_config().clone(),
             net: NetConfig::Netcode {
                 config: NetcodeConfig::default()
-                    .with_protocol_id(PROTOCOL_ID)
-                    .with_key(KEY),
+                    .with_protocol_id(protocol_id)
+                    .with_key(private_key),
                 io: IoConfig::from_transport(transport_config).with_conditioner(link_conditioner),
             },
             ..default()

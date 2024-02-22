@@ -10,5 +10,6 @@ path = "src/main.rs"
 [dependencies]
 
 bevy = { version = "0.13", features = [] }
+bevy_ehttp = "0.2"
 # 
-games = { path = "../games", default-features = false, features = ["client"] }
+games = { path = "../games" }

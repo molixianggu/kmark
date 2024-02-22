@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::info};
 
 use crate::enums::GameState;
 
@@ -19,6 +19,11 @@ fn init(mut commands: Commands) {
 
 impl Plugin for PagePlugin {
     fn build(&self, app: &mut App) {
+        #[cfg(feature = "client")]
+        {
+            app.add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::new());
+        }
+
         app.add_systems(Startup, init);
 
         title::TitlePage::register(app);
@@ -46,13 +51,16 @@ pub trait Page {
     }
 
     fn register(app: &mut App) {
+        info!("注册 {}", Self::name());
         #[cfg(feature = "server")]
         {
             Self::server_setup(app);
+            info("server");
         }
         #[cfg(feature = "client")]
         {
             Self::client_setup(app);
+            info("client");
         }
 
         Self::build(app);

@@ -9,8 +9,6 @@ path = "src/lib.rs"
 
 [features]
 
-default = ["client", "server"]
-
 client = []
 server = []
 
@@ -18,9 +16,16 @@ server = []
 # 
 bevy = { version = "0.13", features = ["jpeg", "mp3"] }
 bevy_asset_loader = { version = "0.20" }
+
+bevy-inspector-egui = "0.23.2"
+
+# 
+bevy_ehttp = "0.2"
 # 
 lightyear = { version = "0.10", features = ["webtransport", "websocket"] }
 derive_more = { version = "0.99", features = ["add", "mul"] }
 serde = { version = "1.0.196", features = ["derive"] }
-
 anyhow = "1.0.80"
+base64 = "0.21.7"
+
+

@@ -21,3 +21,4 @@ lto = "thin"
 
 [patch.crates-io]
 bitintr = { git = "https://github.com/finnbear/bitintr", branch = "remove_nightly" }
+lightyear = { git = "https://github.com/molixianggu/lightyear.git", branch = "main" }

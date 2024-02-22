@@ -5,8 +5,7 @@ use super::protocol::MyProtocol;
 
 #[derive(Message, Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Hello {
-    pub id: u32,
-    pub name: String,
+    pub message: u32,
 }
 
 #[message_protocol(protocol = "MyProtocol")]

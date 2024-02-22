@@ -1,5 +1,6 @@
 use base64::prelude::*;
 use lightyear::connection::netcode::NetcodeServer;
+use rand::Rng;
 use rocket::serde::json::Json;
 use std::net::SocketAddr;
 use std::str::FromStr;
@@ -17,7 +18,9 @@ fn login() -> Json<Response<String>> {
     let mut server =
         NetcodeServer::new(configs::CONFIG.protocol_id, private_key.try_into().unwrap()).unwrap();
 
-    let client_id = 123u64;
+    let mut rng = rand::thread_rng();
+
+    let client_id = rng.gen::<u64>();
     let token = server
         .token(client_id, SocketAddr::from_str(bind_addr).unwrap())
         .expire_seconds(60) // defaults to 30 seconds, negative for no expiry

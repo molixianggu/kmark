@@ -8,6 +8,7 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
+        app.add_plugins(bevy_ehttp::prelude::HttpPlugin);
         // 初始化游戏引擎
         app.add_plugins(
             DefaultPlugins
@@ -39,13 +40,13 @@ impl Plugin for GamePlugin {
         app.add_plugins((AssetLoadPlugin, PagePlugin::new()));
 
         // 调试插件
-        #[cfg(debug_assertions)]
-        {
-            app.add_plugins((
-                bevy::diagnostic::FrameTimeDiagnosticsPlugin,
-                bevy::diagnostic::LogDiagnosticsPlugin::default(),
-            ));
-        }
+        // #[cfg(debug_assertions)]
+        // {
+        //     app.add_plugins((
+        //         bevy::diagnostic::FrameTimeDiagnosticsPlugin,
+        //         bevy::diagnostic::LogDiagnosticsPlugin::default(),
+        //     ));
+        // }
     }
 }
 

@@ -1,3 +1,3 @@
 mod network;
 
-pub use network::{ServerGlobal, ClientGlobal};
+pub use network::{ServerGlobal, ClientGlobal, TokenResource};

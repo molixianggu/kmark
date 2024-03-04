@@ -28,13 +28,6 @@ impl Plugin for GamePlugin {
         app.add_plugins(server_plugin_group.build());
         app.init_state::<GameState>();
         app.add_plugins(PagePlugin::new());
-        // #[cfg(debug_assertions)]
-        // {
-        //     app.add_plugins((
-        //         bevy::diagnostic::FrameTimeDiagnosticsPlugin,
-        //         bevy::diagnostic::LogDiagnosticsPlugin::default(),
-        //     ));
-        // }
     }
 }
 

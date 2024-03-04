@@ -1,6 +1,4 @@
-use bevy::prelude::{
-    default, Bundle, Color, Component, Deref, DerefMut, Entity, EntityMapper, Vec2,
-};
+use bevy::{prelude::{default, Bundle, Component, Deref, DerefMut, Entity, EntityMapper, Vec2}, reflect::Reflect};
 use derive_more::{Add, Mul};
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -13,16 +11,22 @@ use super::protocol::{MyProtocol, Replicate};
 pub struct PlayerBundle {
     id: PlayerId,
     position: PlayerPosition,
-    color: PlayerColor,
+    animation: PlayerAnimation,
+    attribute: PlayerAttribute,
     replicate: Replicate,
 }
 
 impl PlayerBundle {
-    pub fn new(id: ClientId, position: Vec2, color: Color) -> Self {
+    pub fn new(id: ClientId, position: Vec2) -> Self {
         Self {
             id: PlayerId(id),
             position: PlayerPosition(position),
-            color: PlayerColor(color),
+            animation: PlayerAnimation { frame: 1 },
+            attribute: PlayerAttribute {
+                speed: 10.0,
+                skin: "moko".to_string(),
+                hp: 100.0,
+            },
             replicate: Replicate {
                 // prediction_target: NetworkTarget::None,
                 prediction_target: NetworkTarget::Only(vec![id]),
@@ -36,8 +40,14 @@ impl PlayerBundle {
 #[derive(Component, Message, Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct PlayerId(ClientId);
 
+impl PlayerId {
+    pub fn is_equal(&self, id: u64) -> bool {
+        self.0 == id
+    }
+}
+
 #[derive(
-    Component, Message, Serialize, Deserialize, Clone, Debug, PartialEq, Deref, DerefMut, Add, Mul,
+    Component, Message, Serialize, Deserialize, Clone, Debug, PartialEq, Deref, DerefMut, Add, Mul, Reflect
 )]
 pub struct PlayerPosition(Vec2);
 
@@ -49,8 +59,19 @@ impl Mul<f32> for &PlayerPosition {
     }
 }
 
-#[derive(Component, Message, Deserialize, Serialize, Clone, Debug, PartialEq)]
-pub struct PlayerColor(pub(crate) Color);
+#[derive(Component, Message, Deserialize, Serialize, Clone, Debug, PartialEq, Reflect)]
+pub struct PlayerAnimation {
+    pub frame: u32,
+}
+
+#[derive(Component, Message, Deserialize, Serialize, Clone, Debug, PartialEq, Reflect)]
+pub struct PlayerAttribute {
+    pub speed: f32,
+    pub skin: String,
+    // pub jump: f32,
+    // pub color: Color,
+    pub hp: f32,
+}
 
 #[derive(Component, Message, Deserialize, Serialize, Clone, Debug, PartialEq)]
 #[message(custom_map)]
@@ -68,6 +89,8 @@ pub enum Components {
     PlayerId(PlayerId),
     #[sync(full)]
     PlayerPosition(PlayerPosition),
+    #[sync(simple)]
+    PlayerAnimation(PlayerAnimation),
     #[sync(once)]
-    PlayerColor(PlayerColor),
+    PlayerAttribute(PlayerAttribute),
 }

@@ -1,18 +1,29 @@
 use bevy::prelude::*;
-use lightyear::client::events::EntitySpawnEvent;
+use lightyear::client::events::{EntitySpawnEvent, InputEvent as ClientInputEvent};
+use lightyear::client::input::InputSystemSet;
+use lightyear::client::prediction::Predicted;
 use lightyear::client::resource::connect_with_token;
-use lightyear::server::events::{ConnectEvent, DisconnectEvent, InputEvent};
-use lightyear::shared::tick_manager::TickManager;
+use lightyear::server::events::{ConnectEvent, DisconnectEvent, InputEvent as ServerInputEvent};
 use std::collections::HashMap;
 
 use super::Page;
-use crate::protocol::player::{PlayerColor, PlayerId, PlayerPosition};
+use crate::loader::TextureAssets;
+use crate::protocol::player::{PlayerAnimation, PlayerAttribute, PlayerId, PlayerPosition};
 use crate::protocol::protocol::ClientMut;
 use crate::resource::{ClientGlobal, ServerGlobal, TokenResource};
-use crate::{enums::{GameState, InputDirection, Inputs}, protocol::PlayerBundle};
+use crate::{
+    enums::{GameState, InputDirection, Inputs},
+    protocol::PlayerBundle,
+};
 
 #[derive(Component)]
 pub struct GamePage;
+
+#[derive(Component)]
+struct Player;
+
+#[derive(Component)]
+struct PlayerSelf;
 
 impl GamePage {
     // System
@@ -31,12 +42,28 @@ impl GamePage {
     fn create_player(
         mut commands: Commands,
         mut reader: EventReader<EntitySpawnEvent>,
-        player: Query<(Entity, &PlayerId, &PlayerPosition, &PlayerColor)>,
+        player: Query<(Entity, &PlayerId, &PlayerPosition)>,
+        global: Res<ClientGlobal>,
+        textures: Res<TextureAssets>,
     ) {
         for event in reader.read() {
-            if let Ok(player) = player.get(event.entity()) {
-                // commands.entity(entity);
-                info!("创建玩家: {:?}", player.1);
+            if let Ok((entity, player_id, position)) = player.get(event.entity()) {
+                info!("创建玩家: {:?}", player_id);
+                commands.entity(entity).insert((
+                    Player,
+                    SpriteBundle {
+                        texture: textures.moko.clone(),
+                        transform: Transform::from_translation(Vec3::new(
+                            position.x, position.y, 0.0,
+                        )),
+                        ..Default::default()
+                    },
+                    TextureAtlas::from(textures.moko_layout.clone()),
+                ));
+
+                if player_id.is_equal(global.client_id) {
+                    commands.entity(entity).insert(PlayerSelf);
+                }
             }
         }
     }
@@ -63,18 +90,69 @@ impl GamePage {
         if !direction.is_none() {
             return client.add_input(Inputs::Direction(direction));
         }
-        // info!("Sending input: {:?} on tick: {:?}", &input, client.tick());
-        return client.add_input(Inputs::None);
+
+        if keypress.just_pressed(KeyCode::Space) {
+            return client.add_input(Inputs::Jump);
+        }
+
+        if keypress.just_pressed(KeyCode::KeyE) {
+            return client.add_input(Inputs::Action);
+        }
+
+        if keypress.just_pressed(KeyCode::KeyQ) {
+            return client.add_input(Inputs::SpeedUp);
+        }
+
+        if keypress.just_pressed(KeyCode::KeyZ) {
+            return client.add_input(Inputs::SpeedDown);
+        }
+
+        client.add_input(Inputs::None)
     }
 
-    fn draw_boxes(mut gizmos: Gizmos, players: Query<(&PlayerPosition, &PlayerColor)>) {
-        for (position, color) in &players {
+    fn player_movement(
+        mut player_query: Query<
+            (
+                &mut PlayerPosition,
+                &mut PlayerAnimation,
+                &mut PlayerAttribute,
+            ),
+            With<Predicted>,
+        >,
+        mut input_reader: EventReader<ClientInputEvent<Inputs>>,
+        time: Res<Time>,
+    ) {
+        for input in input_reader.read() {
+            if let Some(input) = input.input() {
+                for (position, animation, attribute) in player_query.iter_mut() {
+                    Self::shared_movement_behaviour(position, animation, attribute, input, &time);
+                }
+            }
+        }
+    }
+
+    fn draw_boxes(mut gizmos: Gizmos, players: Query<&PlayerPosition>) {
+        for position in &players {
             gizmos.rect(
                 Vec3::new(position.x, position.y, 0.0),
                 Quat::IDENTITY,
                 Vec2::ONE * 50.0,
-                color.0,
+                Color::RED,
             );
+        }
+    }
+
+    fn sync_player(
+        mut players: Query<(
+            &PlayerPosition,
+            &mut Transform,
+            &PlayerAnimation,
+            &mut TextureAtlas,
+        )>,
+    ) {
+        for (position, mut transform, animation, mut atlas) in players.iter_mut() {
+            transform.translation = Vec3::new(position.x, position.y, 0.0);
+            atlas.index = animation.frame as usize;
         }
     }
 
@@ -90,11 +168,7 @@ impl GamePage {
         for connection in connections.read() {
             let client_id = connection.context();
             info!("玩家 {} 连接", client_id);
-            let entity = commands.spawn(PlayerBundle::new(
-                *client_id,
-                Vec2::new(10.0, 10.0),
-                Color::RED,
-            ));
+            let entity = commands.spawn(PlayerBundle::new(*client_id, Vec2::new(10.0, 10.0)));
             global
                 .client_id_to_entity_id
                 .insert(*client_id, entity.id());
@@ -109,47 +183,74 @@ impl GamePage {
     }
 
     fn movement(
-        mut position_query: Query<&mut PlayerPosition>,
-        mut input_reader: EventReader<InputEvent<Inputs>>,
+        mut player_query: Query<(
+            &mut PlayerPosition,
+            &mut PlayerAnimation,
+            &mut PlayerAttribute,
+        )>,
+        mut input_reader: EventReader<ServerInputEvent<Inputs>>,
         global: Res<ServerGlobal>,
-        tick_manager: Res<TickManager>,
+        time: Res<Time>,
     ) {
         for input in input_reader.read() {
             let client_id = input.context();
             if let Some(input) = input.input() {
-                debug!(
-                    "Receiving input: {:?} from client: {:?} on tick: {:?}",
-                    input,
-                    client_id,
-                    tick_manager.tick()
-                );
                 if let Some(player_entity) = global.client_id_to_entity_id.get(client_id) {
-                    if let Ok(position) = position_query.get_mut(*player_entity) {
-                        Self::shared_movement_behaviour(position, input);
+                    if let Ok((position, animation, attribute)) =
+                        player_query.get_mut(*player_entity)
+                    {
+                        Self::shared_movement_behaviour(
+                            position, animation, attribute, input, &time,
+                        );
                     }
                 }
             }
         }
     }
 
-    fn shared_movement_behaviour(mut position: Mut<PlayerPosition>, input: &Inputs) {
-        const MOVE_SPEED: f32 = 10.0;
+    fn shared_movement_behaviour(
+        mut position: Mut<PlayerPosition>,
+        mut animation: Mut<PlayerAnimation>,
+        mut attribute: Mut<PlayerAttribute>,
+        input: &Inputs,
+        time: &Time,
+    ) {
+        let mut direction_i = u32::MAX;
         match input {
             Inputs::Direction(direction) => {
                 if direction.up {
-                    position.y += MOVE_SPEED;
+                    position.y += attribute.speed * 0.1;
+                    direction_i = 3;
                 }
                 if direction.down {
-                    position.y -= MOVE_SPEED;
+                    position.y -= attribute.speed * 0.1;
+                    direction_i = 0;
                 }
                 if direction.left {
-                    position.x -= MOVE_SPEED;
+                    position.x -= attribute.speed * 0.1;
+                    direction_i = 1;
                 }
                 if direction.right {
-                    position.x += MOVE_SPEED;
+                    position.x += attribute.speed * 0.1;
+                    direction_i = 2;
                 }
             }
+            Inputs::SpeedUp => attribute.speed += 1.0,
+            Inputs::SpeedDown => attribute.speed -= 1.0,
             _ => {}
+        }
+        let v = if direction_i != u32::MAX {
+            direction_i * 3
+                + if (time.elapsed().as_secs_f32() * attribute.speed * 0.5).sin() < 0.0 {
+                    0
+                } else {
+                    2
+                }
+        } else {
+            animation.frame - (animation.frame % 3) + 1
+        };
+        if v != animation.frame {
+            animation.frame = v;
         }
     }
 }
@@ -167,15 +268,35 @@ impl Page for GamePage {
 
     fn client_setup(app: &mut App) {
         app.insert_resource(ClientGlobal { client_id: 0 });
+
+        app.register_type::<PlayerPosition>();
+        app.register_type::<PlayerAnimation>();
+        app.register_type::<PlayerAttribute>();
+
         app.add_systems(OnEnter(Self::state()), (Self::connection,))
-            .add_systems(Update, (Self::create_player, Self::draw_boxes, Self::buffer_input));
+            .add_systems(Update, Self::create_player.run_if(in_state(Self::state())))
+            .add_systems(
+                FixedPreUpdate,
+                Self::buffer_input
+                    .in_set(InputSystemSet::BufferInputs)
+                    .run_if(in_state(Self::state())),
+            )
+            .add_systems(
+                FixedUpdate,
+                Self::player_movement.run_if(in_state(Self::state())),
+            )
+            .add_systems(
+                FixedPostUpdate,
+                Self::sync_player.run_if(in_state(Self::state())),
+            );
     }
 
     fn server_setup(app: &mut App) {
         app.insert_resource(ServerGlobal {
             client_id_to_entity_id: HashMap::new(),
         })
-        .add_systems(Update, (Self::handle_connections, Self::movement));
+        .add_systems(FixedUpdate, (Self::movement,))
+        .add_systems(Update, (Self::handle_connections,));
     }
 
     fn build(app: &mut App) {

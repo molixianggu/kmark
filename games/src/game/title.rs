@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use super::Page;
 use crate::enums::GameState;
 use crate::loader::FontAssets;
-use crate::resource::TokenResource;
+use crate::resource::{ClientGlobal, TokenResource};
 
 #[derive(Component)]
 pub struct TitlePage;
@@ -33,19 +33,21 @@ impl TitlePage {
         }
         info!("start game ! loading...");
         let req = Request::get("http://127.0.0.1:8000/api/users/login");
-        commands.spawn(RequestBundle::<Response<String>>::new(req));
+        commands.spawn(RequestBundle::<Response<LoginResponse>>::new(req));
     }
 
     fn handle_tasks(
         mut commands: Commands,
         mut state: ResMut<NextState<GameState>>,
-        mut requests: EventReader<TypedResponseEvent<Response<String>>>,
+        mut global: ResMut<ClientGlobal>,
+        mut requests: EventReader<TypedResponseEvent<Response<LoginResponse>>>,
     ) {
         for res in &mut requests.read() {
             match res.parse() {
                 Some(res) => {
-                    info!("请求登录成功: {:#?}", res);
-                    commands.insert_resource(TokenResource::new(res.data));
+                    info!("请求登录成功: {:#?}", res.data.client_id);
+                    commands.insert_resource(TokenResource::new(res.data.token.clone()));
+                    global.client_id = res.data.client_id;
                     state.set(GameState::Game);
                 }
                 None => {
@@ -67,7 +69,7 @@ impl Page for TitlePage {
     }
 
     fn client_setup(app: &mut App) {
-        app.register_request_type::<Response<String>>();
+        app.register_request_type::<Response<LoginResponse>>();
         app.add_systems(
             Update,
             (Self::start, Self::handle_tasks).run_if(in_state(Self::state())),
@@ -84,4 +86,12 @@ pub struct Response<T> {
     pub code: u16,
     pub message: String,
     pub data: T,
+}
+
+
+#[derive(Debug, Serialize, Deserialize)]
+struct LoginResponse {
+    token: String,
+    client_id: u64,
+    name: String,
 }

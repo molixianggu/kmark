@@ -2,14 +2,24 @@ use base64::prelude::*;
 use lightyear::connection::netcode::NetcodeServer;
 use rand::Rng;
 use rocket::serde::json::Json;
+use serde::{Serialize, Deserialize};
 use std::net::SocketAddr;
 use std::str::FromStr;
 
 use crate::configs;
 use crate::model::Response;
 
+
+#[derive(Debug, Serialize, Deserialize)]
+struct LoginResponse {
+    token: String,
+    client_id: u64,
+    name: String,
+}
+
+
 #[get("/login")]
-fn login() -> Json<Response<String>> {
+fn login() -> Json<Response<LoginResponse>> {
     let private_key = BASE64_STANDARD
         .decode(configs::CONFIG.private_key.clone())
         .unwrap();
@@ -31,7 +41,11 @@ fn login() -> Json<Response<String>> {
     let result = token.try_into_bytes().unwrap();
 
     // base64 encode the token
-    Response::success(BASE64_STANDARD.encode(&result))
+    Response::success(LoginResponse{
+        token: BASE64_STANDARD.encode(&result),
+        client_id,
+        name: "test".to_string(),
+    })
 }
 
 pub fn users_routes() -> Vec<rocket::Route> {

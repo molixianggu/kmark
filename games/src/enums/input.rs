@@ -25,5 +25,9 @@ pub enum Inputs {
     Action,
     // 没有任何输入
     None,
+
+    // GM
+    SpeedUp,
+    SpeedDown,
 }
 impl UserAction for Inputs {}

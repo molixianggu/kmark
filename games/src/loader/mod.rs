@@ -3,8 +3,10 @@ use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 
 mod font;
+mod textures;
 
 pub use font::FontAssets;
+pub use textures::TextureAssets;
 
 pub struct AssetLoadPlugin;
 
@@ -15,6 +17,7 @@ impl Plugin for AssetLoadPlugin {
             .add_loading_state(
                 LoadingState::new(GameState::Loading)
                     .continue_to_state(GameState::Title)
+                    .load_collection::<textures::TextureAssets>()
                     .load_collection::<font::FontAssets>(),
             );
     }

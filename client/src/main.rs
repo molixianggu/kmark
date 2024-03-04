@@ -1,6 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use bevy::prelude::*;
+use bevy::{prelude::*, window::PresentMode};
 
 use games::{AssetLoadPlugin, ClientPluginGroup, GameState, PagePlugin};
 
@@ -20,12 +20,15 @@ impl Plugin for GamePlugin {
                         canvas: Some("#bevy".to_owned()),
                         // Tells wasm not to override default event handling, like F5 and Ctrl+R
                         prevent_default_event_handling: false,
+                        present_mode: PresentMode::Fifo,
                         ..default()
                     }),
                     ..default()
                 })
                 .set(ImagePlugin::default_nearest()),
         );
+
+        app.insert_resource(Msaa::Off);
 
         // 初始化客户端插件
         let client_plugin_group = ClientPluginGroup::new();

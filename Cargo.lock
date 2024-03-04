@@ -1349,7 +1349,7 @@ dependencies = [
 [[package]]
 name = "bitcode_lightyear_patch"
 version = "0.4.1"
-source = "git+https://github.com/molixianggu/lightyear.git?branch=main#2b10723db43e0621f21103a4a698ce65fa0b007b"
+source = "git+https://github.com/molixianggu/lightyear.git?branch=ccc#3c0e4a0230f0be9c3f5765ccacb9b44e3519cba5"
 dependencies = [
  "bitcode_derive",
  "bitintr",
@@ -3382,7 +3382,7 @@ dependencies = [
 [[package]]
 name = "lightyear"
 version = "0.10.0"
-source = "git+https://github.com/molixianggu/lightyear.git?branch=main#2b10723db43e0621f21103a4a698ce65fa0b007b"
+source = "git+https://github.com/molixianggu/lightyear.git?branch=ccc#3c0e4a0230f0be9c3f5765ccacb9b44e3519cba5"
 dependencies = [
  "anyhow",
  "async-compat",
@@ -3429,7 +3429,7 @@ dependencies = [
 [[package]]
 name = "lightyear_macros"
 version = "0.10.0"
-source = "git+https://github.com/molixianggu/lightyear.git?branch=main#2b10723db43e0621f21103a4a698ce65fa0b007b"
+source = "git+https://github.com/molixianggu/lightyear.git?branch=ccc#3c0e4a0230f0be9c3f5765ccacb9b44e3519cba5"
 dependencies = [
  "anyhow",
  "darling",
@@ -5978,9 +5978,9 @@ dependencies = [
 
 [[package]]
 name = "web-sys-async-io"
-version = "0.2.5"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc617932d9c2a41a3f8a77eb5b57f099305d56e2b443b8417c00e921e72c2789"
+checksum = "038845c22fb86426f23f3af2f28c0b4d09aedd2b6aeef2e1e4aa21a42366ce52"
 dependencies = [
  "js-sys",
  "tokio",
@@ -6630,9 +6630,9 @@ dependencies = [
 
 [[package]]
 name = "xwt-web-sys"
-version = "0.4.7"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "888a753cab1f78abff717ba88d56fa07d5c68850994d0f3096465c40c7afe100"
+checksum = "06d0204451b4b53e1a07abc3cd892d00a0024afb93bfb99a04b8877031539719"
 dependencies = [
  "js-sys",
  "tokio",

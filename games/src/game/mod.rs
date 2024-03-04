@@ -1,4 +1,4 @@
-use bevy::{prelude::*, utils::info};
+use bevy::{prelude::*, render::camera::ScalingMode};
 
 use crate::enums::GameState;
 
@@ -14,20 +14,33 @@ impl PagePlugin {
 }
 
 fn init(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    #[cfg(feature = "client")]
+    {
+        // 添加一个相机
+        commands.spawn(Camera2dBundle {
+            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 1.0)),
+            projection: OrthographicProjection {
+                scaling_mode: ScalingMode::WindowSize(2.0),
+                ..default()
+            },
+            ..default()
+        });
+    }
+    #[cfg(feature = "server")]
+    {}
 }
 
 impl Plugin for PagePlugin {
     fn build(&self, app: &mut App) {
-        #[cfg(feature = "client")]
-        {
-            app.add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::new());
-        }
-
         app.add_systems(Startup, init);
 
         title::TitlePage::register(app);
         game::GamePage::register(app);
+        #[cfg(feature = "client")]
+        {
+            // 查看世界的插件
+            app.add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::new());
+        }
     }
 }
 
@@ -55,12 +68,10 @@ pub trait Page {
         #[cfg(feature = "server")]
         {
             Self::server_setup(app);
-            info("server");
         }
         #[cfg(feature = "client")]
         {
             Self::client_setup(app);
-            info("client");
         }
 
         Self::build(app);

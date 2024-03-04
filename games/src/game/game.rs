@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_entitiles::tiled::resources::TiledTilemapManger;
 use lightyear::client::events::{EntitySpawnEvent, InputEvent as ClientInputEvent};
 use lightyear::client::input::InputSystemSet;
 use lightyear::client::prediction::Predicted;
@@ -28,8 +29,9 @@ struct PlayerSelf;
 impl GamePage {
     // System
 
-    fn load_map() {
+    fn load_map(mut commands: Commands, mut manager: ResMut<TiledTilemapManger>) {
         info!("开始加载地图");
+        manager.switch_to(&mut commands, "01".to_string(), None);
     }
 
     fn connection(world: &mut World) {
@@ -54,7 +56,7 @@ impl GamePage {
                     SpriteBundle {
                         texture: textures.moko.clone(),
                         transform: Transform::from_translation(Vec3::new(
-                            position.x, position.y, 0.0,
+                            position.x, position.y, 0.5,
                         )),
                         ..Default::default()
                     },
@@ -151,8 +153,19 @@ impl GamePage {
         )>,
     ) {
         for (position, mut transform, animation, mut atlas) in players.iter_mut() {
-            transform.translation = Vec3::new(position.x, position.y, 0.0);
+            transform.translation = Vec3::new(position.x, position.y, transform.translation.z);
             atlas.index = animation.frame as usize;
+        }
+    }
+
+    fn sync_camera(
+        mut camera_query: Query<&mut Transform, With<Camera>>,
+        players: Query<&PlayerPosition, With<PlayerSelf>>,
+    ) {
+        for mut transform in camera_query.iter_mut() {
+            if let Ok(position) = players.get_single() {
+                transform.translation = Vec3::new(position.x, position.y, 10.0);
+            }
         }
     }
 
@@ -274,7 +287,10 @@ impl Page for GamePage {
         app.register_type::<PlayerAttribute>();
 
         app.add_systems(OnEnter(Self::state()), (Self::connection,))
-            .add_systems(Update, Self::create_player.run_if(in_state(Self::state())))
+            .add_systems(
+                Update,
+                (Self::create_player, Self::sync_camera).run_if(in_state(Self::state())),
+            )
             .add_systems(
                 FixedPreUpdate,
                 Self::buffer_input
@@ -300,6 +316,7 @@ impl Page for GamePage {
     }
 
     fn build(app: &mut App) {
+        app.add_plugins(super::tiles::TilesPlugin);
         app.add_systems(OnEnter(Self::state()), (Self::load_map,));
     }
 }

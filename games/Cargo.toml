@@ -13,19 +13,25 @@ client = []
 server = []
 
 [dependencies]
-# 
+# bevy
 bevy = { version = "0.13", features = ["jpeg", "mp3"] }
+# 加载资源
 bevy_asset_loader = { version = "0.20", features = ["2d"]}
+# 加载 Tiled 地图
+bevy_entitiles = {version = "0.7.0", features = ["tiled", "physics"]}
+# http
+bevy_ehttp = "0.2"
 
+# 2D 物理
+bevy_xpbd_2d = "0.4.2"
+
+# 调试
 bevy-inspector-egui = "0.23.2"
 
-# 
-bevy_ehttp = "0.2"
-# 
+# 网络
 lightyear = { version = "0.10", features = ["webtransport", "websocket"] }
 derive_more = { version = "0.99", features = ["add", "mul"] }
 serde = { version = "1.0.196", features = ["derive"] }
 anyhow = "1.0.80"
 base64 = "0.21.7"
-
 

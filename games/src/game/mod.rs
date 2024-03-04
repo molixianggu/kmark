@@ -1,6 +1,8 @@
-use bevy::{prelude::*, render::camera::ScalingMode};
+use bevy::prelude::*;
 
 use crate::enums::GameState;
+
+mod tiles;
 
 mod game;
 mod title;
@@ -18,9 +20,9 @@ fn init(mut commands: Commands) {
     {
         // 添加一个相机
         commands.spawn(Camera2dBundle {
-            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 1.0)),
+            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 10.0)),
             projection: OrthographicProjection {
-                scaling_mode: ScalingMode::WindowSize(2.0),
+                scaling_mode: bevy::render::camera::ScalingMode::WindowSize(2.0),
                 ..default()
             },
             ..default()

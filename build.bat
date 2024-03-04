@@ -1,3 +1,4 @@
-cargo build --release --bin web
-cargo build --release --bin service
-cargo build --release --bin client
+cargo run --bin web
+cargo run --bin service --features "server"
+cargo run --bin client --features "client"
+
